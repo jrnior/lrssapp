@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Como você está, Larissa?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#2a1055;--bg2:#3a1873;--ink:#170633;--paper:#efe6ff;--feliz:#ffd23f;--normal:#c9a6ff;--triste:#7f8cff}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:"Baloo 2","Trebuchet MS",sans-serif;color:var(--ink);background:var(--bg);
+  background-image:radial-gradient(var(--bg2) 2px,transparent 2px);background-size:26px 26px;animation:drift 5s linear infinite;
+  display:flex;align-items:center;justify-content:center;padding:20px}
+main{width:100%;max-width:640px}
+.card{background:var(--paper);border:4px solid var(--ink);border-radius:6px;box-shadow:8px 8px 0 var(--ink);overflow:hidden}
+.top{background:var(--ink);color:var(--paper);padding:10px 20px;font-weight:700;font-size:1.05rem}
+h1{font-size:clamp(1.9rem,6.5vw,2.8rem);line-height:1.05;font-weight:800;padding:26px 20px 22px}
+.sub{padding:0 20px 20px;font-weight:500;font-size:1.1rem}
+.opts{display:grid;gap:12px;padding:0 20px 24px}
+button{font:inherit;font-weight:800;font-size:1.6rem;text-align:left;color:var(--ink);cursor:pointer;
+  padding:12px 18px;border:4px solid var(--ink);border-radius:6px;box-shadow:5px 5px 0 var(--ink);
+  transition:transform .08s,box-shadow .08s}
+button:hover{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+button:active{transform:translate(5px,5px);box-shadow:0 0 0 var(--ink)}
+button:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+button[data-m=feliz]{background:var(--feliz)}
+button[data-m=normal]{background:var(--normal)}
+button[data-m=triste]{background:var(--triste)}
+.result{display:none;padding:26px 20px 28px}
+.result p{font-weight:500;font-size:1.15rem}
+.result h2{font-size:clamp(1.6rem,5.5vw,2.3rem);line-height:1.1;font-weight:800;margin:6px 0 16px}
+.result a{display:inline-block;font-weight:800;font-size:1.2rem;color:var(--ink);background:var(--feliz);
+  border:4px solid var(--ink);border-radius:6px;box-shadow:5px 5px 0 var(--ink);padding:8px 16px;text-decoration:none}
+.actions{display:flex;flex-wrap:wrap;gap:12px}
+.again{font-size:1.2rem;padding:8px 16px;background:var(--normal)}
+@keyframes drift{to{background-position:26px 0}}
+@media (prefers-reduced-motion:reduce){button{transition:none}body{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <section id="quiz">
+      <h1>Como você está se sentindo hoje, Larissa?</h1>
+      <div class="opts">
+        <button data-m="feliz">Feliz</button>
+        <button data-m="normal">Normal</button>
+        <button data-m="triste">Triste</button>
+      </div>
+    </section>
+    <section class="result" id="result" aria-live="polite">
+      <p id="msg"></p>
+      <h2 id="song"></h2>
+      <div class="actions">
+        <a id="go" href="#" target="_blank" rel="noopener">Abrir no Spotify</a>
+        <button type="button" id="again" class="again">Tentar outra vez</button>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+/* Classificação das músicas por clima da letra. Formato: artista -> títulos separados por ; */
+const D={
+feliz:{
+"Frejat":"Amor pra recomeçar",
+"Skank":"Acima do Sol;Vamos Fugir",
+"Engenheiros Do Hawaii":"O Papa É Pop",
+"Titãs":"É preciso saber viver",
+"Os Paralamas Do Sucesso":"Aonde Quer Que Eu Vá",
+"Raimundos":"Mulher de fases",
+"Cazuza":"Exagerado",
+"Matuê":"Vem Chapar;Kenny G;777-666;A Morte do Autotune;Conexões de Máfia",
+"pumapjl":"Beira Mar;Ai Calica;Mar;Sementinha do Mal",
+"Don L":"Aquela Fé",
+"Djonga":"O Mundo é Nosso;SOLTO;CORRA",
+"Baco Exu do Blues":"Autoestima",
+"Xamã":"Luxúria;Uma Linda Mulher;Leão;Monalisa",
+"MC Hariel":"Espancando Recalque;Cupido;Bica Na Canela",
+"Veigh":"Vida Chique;Clickbait;Novo Balanço",
+"Vulgo FK":"Meca Cereja;Ballena",
+"Recayd Mob":"Plaqtudum;Mlks de Sp",
+"Slipmami":"Potranca;Oompa Loompa",
+"Rudies Flacko":"Avassalador",
+"Ryu, The Runner":"Mantém o Pique",
+"Jé":"Nintendo Switch",
+"Lana Del Rey":"Doin' Time;Lust For Life;Take Me Home, Country Roads;Cinnamon Girl;Brooklyn Baby",
+"The Beatles":"Day Tripper",
+"Bon Jovi":"Livin' On A Prayer;It's My Life",
+"KISS":"I Was Made For Lovin' You;Rock And Roll All Nite;I Love It Loud",
+"Queen":"Another One Bites The Dust",
+"Guns N' Roses":"Sweet Child O' Mine;Paradise City;Welcome To The Jungle",
+"AC/DC":"Highway to Hell;Back In Black;Thunderstruck;T.N.T.",
+"Red Hot Chili Peppers":"Can't Stop;Dani California;By the Way;The Zephyr Song",
+"Arctic Monkeys":"Fluorescent Adolescent;R U Mine?;I Want It All",
+"Scorpions":"Rock You Like A Hurricane",
+"Green Day":"American Idiot",
+"Mother Mother":"Hayloft",
+"Los Hermanos":"Anna Júlia",
+"The Outfield":"Your Love"
+},
+normal:{
+"Skank":"Resposta;Dois Rios;Vou Deixar",
+"Engenheiros Do Hawaii":"Dom Quixote;Infinita Highway;O Preço;Terra de Gigantes",
+"Capital Inicial":"À Sua Maneira (De Música Ligeira)",
+"Os Paralamas Do Sucesso":"Lanterna Dos Afogados",
+"Titãs":"Homem primata;Epitáfio",
+"Detonautas":"Olhos certos",
+"Cazuza":"O Tempo Não Pára",
+"Maria Gadú":"Oração Ao Tempo",
+"Nenhum De Nós":"O Astronauta de Mármore (Starman)",
+"BK":"Planos;Caminhos;O Mundo é Nosso",
+"Pirâmide Perdida":"Dispiei",
+"Tarcis":"Beira Mar",
+"pumapjl":"Intro;Aquelas Coisas;Praga;Mar, Pt. 2",
+"Luccas Carlos":"jovem carlos;conversa",
+"Don L":"Beira de Piscina - Remix;Depois das Três",
+"Matuê":"Máquina do Tempo;Gorilla Roxo;É Sal;Banco",
+"Djonga":"Eu;Nós;BENÇA;TIPO;LEAL;1010;Verdades Inventadas;Geminiano;em quase tudo",
+"Filipe Ret":"Reús;Nova Sorte;Libertários Não Morrem;Neurótico de Guerra;A Meu Favor;A Libertina",
+"Putodiparis":"Sr. Armani & Sheik S Freestyle;Chico Buarque Interlúdio",
+"Tasha & Tracie":"TANG",
+"Jé":"Intro (Traphouse)",
+"Trippie Redd":"Love Scars",
+"Yago Oproprio":"Rajada",
+"Racionais MC's":"Jorge da Capadócia",
+"Veigh":"Engana Dizendo Que Ama",
+"Baco Exu do Blues":"Girassóis de Van Gogh;Flamingos;Minotauro de Borges;Bluesman;Imortais e Fatais;Banho de Sol;Dois Amores",
+"Xamã":"Era uma Vez",
+"Lana Del Rey":"Salvatore;West Coast;Art Deco;White Mustang;Ultraviolence;Radio;Music To Watch Boys To;Dealer;Cherry;Dark Paradise;Thunder;Love;Freak;Tough;Living Legend;High By The Beach;Tulsa Jesus Freak;Norman fucking Rockwell;Born To Die;Video Games;Diet Mountain Dew;Season Of The Witch;First Light;Stargirl Interlude;Once Upon a Dream",
+"Aerosmith":"Cryin'",
+"Bon Jovi":"I'll Be There For You",
+"Black Sabbath":"Paranoid;Iron Man",
+"Queen":"Bohemian Rhapsody",
+"Metallica":"Enter Sandman;Master Of Puppets;For Whom The Bell Tolls",
+"Guns N' Roses":"Knockin' On Heaven's Door;Sympathy For The Devil",
+"Linkin Park":"One Step Closer",
+"Red Hot Chili Peppers":"The Adventures of Rain Dance Maggie;Pink as Floyd;Californication;Over Funk;Scar Tissue;Snow (Hey Oh)",
+"Nirvana":"Come As You Are;Lithium;Smells Like Teen Spirit",
+"AC/DC":"Hells Bells;Shot In The Dark",
+"Pink Floyd":"Another Brick in the Wall, Pt. 2;Time",
+"Megadeth":"Symphony Of Destruction",
+"Slipknot":"Psychosocial;The Devil in I;Duality;Before I Forget;Surfacing",
+"Iron Maiden":"The Trooper;Run to the Hills",
+"Scorpions":"Wind Of Change",
+"System Of A Down":"Hypnotize;Chop Suey!;B.Y.O.B.",
+"Arctic Monkeys":"When The Sun Goes Down;Do I Wanna Know?;I Wanna Be Yours;Knee Socks;Arabella;Fireside;Mad Sounds;No. 1 Party Anthem;Four Out Of Five;Why'd You Only Call Me When You're High?",
+"Mother Mother":"Burning Pile",
+"O Grilo":"Serenata Existencialista",
+"Creedence Clearwater Revival":"Have You Ever Seen The Rain"
+},
+triste:{
+"Frejat":"Segredos",
+"Engenheiros Do Hawaii":"3 X 4;Refrão De Bolero;Eu Que Não Amo Você",
+"Skank":"Sutilmente",
+"Capital Inicial":"Primeiros Erros (Chove)",
+"BK":"Amanhecer;Músicas de amor nunca mais;Só me ligar;Quadros;Amores, Vícios e Obsessões;Não Me Espere;Castelos & Ruínas",
+"Luccas Carlos":"(eu não queria) falar de amor",
+"Matuê":"Anos Luz",
+"Djonga":"penumbra;até sua alma;Todo Errado;Procuro Alguém;JUNHO DE 94",
+"Kiaz":"Cê tá bem - Remix",
+"MC Hariel":"Dose de Desilusão;Espelho",
+"Baco Exu do Blues":"Me Desculpa Jay Z;Queima Minha Pele;A Pele Que Habito;Te Amo Disgraça;Lágrimas;Tardes Que Nunca Acabam",
+"Lana Del Rey":"Young And Beautiful;Say Yes To Heaven;Summertime Sadness;Chemtrails Over The Country Club;Margaret;Let The Light In;Sad Girl;Pretty When You Cry;The Other Woman;How to disappear;Paris, Texas;Happiness is a butterfly;Snow On The Beach;Mariners Apartment Complex;The Blackest Day;White Feather Hawk Tail Deer Hunter;Tomorrow Never Came;Did you know that there's a tunnel under Ocean Blvd",
+"The Weeknd":"The Abyss",
+"Metallica":"Nothing Else Matters;Sad But True",
+"Guns N' Roses":"November Rain;Don't Cry",
+"Linkin Park":"In the End;Numb",
+"Red Hot Chili Peppers":"Otherside",
+"Nirvana":"Something In The Way;About A Girl",
+"Scorpions":"Still Loving You",
+"System Of A Down":"Aerials;Lonely Day",
+"Arctic Monkeys":"505;Crying Lightning;One For The Road;Snap Out Of It",
+"Slipknot":"Vermilion, Pt. 2"
+}};
+
+const pool={};
+for(const m in D){pool[m]=[];for(const a in D[m])D[m][a].split(";").forEach(t=>pool[m].push({a,t}))}
+
+const msgs={feliz:"Que bom! Essa é pra continuar assim:",normal:"Um dia comum merece uma boa trilha:",triste:"Tudo bem. Essa é pra te fazer companhia:"};
+
+document.querySelectorAll("button[data-m]").forEach(b=>b.addEventListener("click",()=>{
+  const list=pool[b.dataset.m];
+  const s=list[Math.floor(Math.random()*list.length)];
+  const url="https://open.spotify.com/search/"+encodeURIComponent(s.a+" "+s.t)+"/tracks";
+  document.getElementById("quiz").style.display="none";
+  const r=document.getElementById("result");r.style.display="block";
+  document.getElementById("msg").textContent=msgs[b.dataset.m];
+  document.getElementById("song").textContent=s.a+" - "+s.t;
+  document.getElementById("go").href=url;
+}));
+document.getElementById("again").addEventListener("click",()=>{
+  document.getElementById("result").style.display="none";
+  document.getElementById("quiz").style.display="block";
+});
+</script>
+</body>
+</html>
