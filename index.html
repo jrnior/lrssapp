@@ -183,7 +183,7 @@ const msgs={feliz:"Que bom! Essa é pra continuar assim:",normal:"Um dia comum m
 document.querySelectorAll("button[data-m]").forEach(b=>b.addEventListener("click",()=>{
   const list=pool[b.dataset.m];
   const s=list[Math.floor(Math.random()*list.length)];
-  const url="https://open.spotify.com/search/"+encodeURIComponent(s.a+" "+s.t)+"/tracks";
+  const url="https://open.spotify.com/search/"+encodeURIComponent(s.a+" "+s.t);
   document.getElementById("quiz").style.display="none";
   const r=document.getElementById("result");r.style.display="block";
   document.getElementById("msg").textContent=msgs[b.dataset.m];
